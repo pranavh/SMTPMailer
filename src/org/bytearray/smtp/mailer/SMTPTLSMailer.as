@@ -229,6 +229,11 @@ package org.bytearray.smtp.mailer {
 		private function queueHandler(event:ProgressEvent):void {
 			var response:String = event.target.readUTFBytes(event.target.bytesAvailable);
 
+			if(response == "") {
+				trace("Blank response, ignoring");
+				return;
+			}
+			
 			trace(response);
 
 			buffer.length = 0;
@@ -258,6 +263,7 @@ package org.bytearray.smtp.mailer {
 				/*writeUTFBytes("QUIT\r\n");
 				flush();*/
 			} else {
+				
 				if (evt(response, smtpReturn, smtpInfos)) {
 					var command:String = queue.shift();
 					trace(command);
@@ -301,7 +307,11 @@ package org.bytearray.smtp.mailer {
 		// Keep in mind SMTP servers can have different result messages the detection can be modified to match some specific SMTP servers
 		private function socketDataHandler(pEvt:ProgressEvent):void {
 			var response:String = pEvt.target.readUTFBytes(pEvt.target.bytesAvailable);
-
+			
+			if(response == "") {
+				trace("Blank response, ignored");
+				return;
+			}
 			trace(response);
 
 			buffer.length = 0;
