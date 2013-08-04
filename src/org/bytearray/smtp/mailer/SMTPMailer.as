@@ -120,7 +120,24 @@ package org.bytearray.smtp.mailer {
 			addToQueue(c);
 			startQueue();
 		}
-
+		
+		//Check if the receive email is multiple
+		public function checkMultiTo(queue:Array, to:String):Array {
+			if (to.indexOf('; ') > 0) {
+				var emails:Array = to.split('; ');
+				emails = emails.map(function(item:*, i:int, all:Array):String {
+					return 'RCPT TO: <' + item + '>';
+				});
+				return [queue[0]].concat(emails).concat(queue.slice(2));
+			}else {
+				return queue;
+			}
+		}
+		
+		//Encode unicode words
+		public function UTF8Encode(str:String):String {
+			return '=?utf-8?B?'+Base64.encode64String(str)+'?=';
+		}
 		/*
 		* This method is used to send emails with attached files and HTML
 		* takes an incoming Bytearray and convert it to base64 string
@@ -131,7 +148,10 @@ package org.bytearray.smtp.mailer {
 				authenticate(sLogin, sPass);
 				var md5Boundary:String = MD5.hash(String(getTimer()));
 				var base64String:String = Base64.encode64(pByteArray, true);
+				pSubject = this.UTF8Encode(pSubject);
+				fromName = this.UTF8Encode(fromName);
 				var c:Array = [ "MAIL FROM: <" + pFrom + ">", "RCPT TO: <" + pDest + ">", "DATA\r\n" + "From: " + fromName + "<" + pFrom + ">\r\n" + "To: " + pDest + "\r\n" + "Date: " + new Date().toString() + "\r\n" + "Subject: " + pSubject + "\r\n" + "MIME-Version: 1.0\r\n" + "Content-Type: multipart/mixed; boundary=------------" + md5Boundary + "\r\n\r\n" + "This is a multi-part message in MIME format.\r\n" + "--------------" + md5Boundary + "\r\n" + "Content-Type: text/html; charset=UTF-8; format=flowed\r\n\r\n" + pMess + "\r\n" + "--------------" + md5Boundary + "\r\n" + readHeader(pByteArray, pFileName) + "Content-Transfer-Encoding: base64\r\n" + "\r\n" + base64String + "\r\n" + "--------------" + md5Boundary + "-\r\n" + "." ];
+				c = this.checkMultiTo(c, pDest);
 				addToQueue(c);
 				startQueue();
 
@@ -149,7 +169,10 @@ package org.bytearray.smtp.mailer {
 			try {
 
 				authenticate(sLogin, sPass);
+				pSubject = this.UTF8Encode(pSubject);
+				fromName = this.UTF8Encode(fromName);
 				var c:Array = [ "MAIL FROM: <" + pFrom + ">", "RCPT TO: <" + pDest + ">", "DATA\r\n" + "From: " + fromName + "<" + pFrom + ">\r\n" + "To: " + pDest + "\r\n" + "Date: " + new Date().toString() + "\r\n" + "Subject: " + pSubject + "\r\n" + "MIME-Version: 1.0\r\n" + "Content-Type: text/html; charset=UTF-8; format=flowed\r\n\r\n" + pMess + "", "." ];
+				c = this.checkMultiTo(c, pDest);
 				addToQueue(c);
 				startQueue();
 
@@ -163,8 +186,10 @@ package org.bytearray.smtp.mailer {
 			try {
 
 				authenticate(sLogin, sPass);
+				pSubject = this.UTF8Encode(pSubject);
+				fromName = this.UTF8Encode(fromName);
 				var c:Array = [ "MAIL FROM: <" + from + ">", "RCPT TO: <" + to + ">", "DATA\r\n" + "From: " + fromName + "<" + from + ">\r\n" + "To: " + to + "\r\n" + "Subject: " + subject + "\r\n" + "MIME-Version: 1.0\r\n" + "Content-Type: text/plain; charset=UTF-8; format=flowed\r\n\r\n" + message + "", "." ];
-
+				c = this.checkMultiTo(c, pDest);
 				addToQueue(c);
 				startQueue();
 				trace("queued test email");
@@ -180,8 +205,10 @@ package org.bytearray.smtp.mailer {
 			try {
 
 				authenticate(sLogin, sPass);
+				pSubject = this.UTF8Encode(pSubject);
+				fromName = this.UTF8Encode(fromName);
 				var c:Array = [ "MAIL FROM: <" + from + ">", "RCPT TO: <" + to + ">", "DATA\r\n" + "From: " + fromName + "<" + from + ">\r\n" + "To: " + to + "\r\n" + "Subject: Testing SMTPMailer\r\n" + "MIME-Version: 1.0\r\n" + "Content-Type: text/html; charset=UTF-8; format=flowed\r\n\r\n" + "That you are seeing this email means it works :)", "." ];
-
+				c = this.checkMultiTo(c, to);
 				addToQueue(c);
 				startQueue();
 				trace("queued test email");
